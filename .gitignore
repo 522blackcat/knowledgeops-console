@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# 本地配置与密钥
+.env
+.env.*
+!.env.example
+mcp_servers.json
+
+# 数据库和运行数据
+*.db
+*.sqlite
+*.sqlite3
+data/
+uploads/
+logs/
+checkpoints/
+evaluation/results/
+
+# 编辑器
+.idea/
+.vscode/
+
+# 系统文件
+.DS_Store
+Thumbs.db

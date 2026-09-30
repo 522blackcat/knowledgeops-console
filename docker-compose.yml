@@ -1,0 +1,91 @@
+# KnowledgeOps Console：PostgreSQL/Redis/API/Worker/前端；复用已存在的 Qdrant/Ollama。
+# 默认经 Windows Docker Desktop 的 host.docker.internal 访问现有 Qdrant/Ollama 映射端口。
+# 如果现有容器没有发布端口，请改为共享 Docker 网络并使用容器名。
+name: knowledgeops-console
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agent_db
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env 中配置 POSTGRES_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U agent -d agent_db']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: [redis-server, --appendonly, 'yes']
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      HF_HOME: /models/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+    extra_hosts: ['host.docker.internal:host-gateway']
+    ports: ['${API_PORT:-8000}:8000']
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
+    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000']
+  agent-worker:
+    build: .
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      HF_HOME: /models/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+    extra_hosts: ['host.docker.internal:host-gateway']
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
+    command: [python, -m, agent.worker]
+  rag-worker:
+    build: .
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      HF_HOME: /models/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+    extra_hosts: ['host.docker.internal:host-gateway']
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
+    command: [python, -m, rag.worker]
+  cleanup-worker:
+    build: .
+    restart: unless-stopped
+    env_file: [.env]
+    extra_hosts: ['host.docker.internal:host-gateway']
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs']
+    command: [python, -m, rag.cleanup_worker]
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on: [api]
+    ports: ['${FRONTEND_PORT:-8080}:80']
+volumes:
+  postgres_data:
+    name: project_postgres_data
+  redis_data:
+    name: project_redis_data
+  hf_models:
+    name: project_hf_models
