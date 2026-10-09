@@ -20,6 +20,11 @@ from agent.events import (
     notify_run_event,
 )
 
+from agent.completion import (
+    should_replace_title,
+    title_from_question,
+)
+
 from app.dependencies import (
     CurrentUser,
     require_permission,
@@ -48,6 +53,10 @@ from infrastructure.models import (
 
 from infrastructure.redis_client import (
     get_redis,
+)
+
+from memory.messages import (
+    append_message,
 )
 
 
@@ -175,6 +184,34 @@ async def create_run(
 
     db.add(run)
 
+    agent_configuration = agent.configuration or {}
+    prompt_version = str(
+        agent_configuration.get(
+            "prompt_version",
+            "v1",
+        )
+    )
+
+    await append_message(
+        db,
+        tenant_id=current_user.tenant_id,
+        conversation_id=conversation.id,
+        role="user",
+        content=body.question,
+        metadata={
+            "run_id": str(run_id),
+            "agent_id": str(agent.id),
+            "prompt_version": prompt_version,
+        },
+    )
+
+    if should_replace_title(
+        conversation.title
+    ):
+        conversation.title = title_from_question(
+            body.question
+        )
+
     await append_run_event(
         db,
         tenant_id=current_user.tenant_id,
@@ -182,6 +219,18 @@ async def create_run(
         event_type="run.queued",
         payload={
             "status": "queued",
+        },
+    )
+    await append_run_event(
+        db,
+        tenant_id=current_user.tenant_id,
+        run_id=run_id,
+        event_type="run.stage",
+        payload={
+            "stage": "queued",
+            "status": "queued",
+            "message": "任务已进入队列",
+            "prompt_version": prompt_version,
         },
     )
 

@@ -27,7 +27,7 @@ from pydantic import (
     Field,
 )
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -37,6 +37,8 @@ from app.dependencies import (
     CurrentUser,
     require_permission,
 )
+
+from app.audit import write_audit_log
 
 from app.rbac import Permission
 
@@ -67,6 +69,12 @@ from rag.storage import (
 router = APIRouter(
     prefix="/api/knowledge",
     tags=["知识库"],
+)
+
+
+ACTIVE_INGEST_STATUSES = (
+    "queued",
+    "processing",
 )
 
 
@@ -119,6 +127,22 @@ async def create_knowledge_base(
     )
 
     db.add(knowledge_base)
+
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action="knowledge_base.create",
+        resource_type="knowledge_base",
+        resource_id=str(knowledge_base.id),
+        summary=f"创建知识库：{knowledge_base.name}",
+        metadata={
+            "name": knowledge_base.name,
+            "scope": knowledge_base.scope,
+            "collection_name": (
+                knowledge_base.collection_name
+            ),
+        },
+    )
 
     await db.commit()
 
@@ -279,6 +303,25 @@ async def upload_document(
             missing_ok=True
         )
 
+        await write_audit_log(
+            db,
+            current_user=current_user,
+            action="document.upload_duplicate",
+            resource_type="knowledge_document",
+            resource_id=str(duplicate.id),
+            summary=(
+                f"重复上传文档：{stored.filename}"
+            ),
+            metadata={
+                "knowledge_base_id": str(
+                    knowledge_base_id
+                ),
+                "filename": stored.filename,
+                "content_hash": stored.content_hash,
+            },
+        )
+        await db.commit()
+
         return {
             "document_id": str(
                 duplicate.id
@@ -315,6 +358,23 @@ async def upload_document(
 
     db.add(job)
 
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action="document.upload",
+        resource_type="knowledge_document",
+        resource_id=str(document.id),
+        summary=f"上传文档：{document.filename}",
+        metadata={
+            "knowledge_base_id": str(
+                knowledge_base_id
+            ),
+            "ingest_job_id": str(job.id),
+            "filename": document.filename,
+            "content_hash": document.content_hash,
+        },
+    )
+
     try:
         await db.commit()
 
@@ -343,6 +403,149 @@ async def upload_document(
     return {
         "document_id": str(document.id),
         "ingest_job_id": str(job.id),
+        "status": "queued",
+    }
+
+
+@router.post(
+    "/documents/{document_id}/reindex",
+    status_code=202,
+)
+async def reindex_document(
+    document_id: uuid.UUID,
+    current_user: CurrentUser = Depends(
+        require_permission(
+            Permission.KNOWLEDGE_WRITE
+        )
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    用现有文件重建文档索引。
+
+    这里不提前切换 current_version。
+    Worker 在新版本全部切片和向量写入成功后，
+    才发布新版本，因此重建期间旧版本仍可检索。
+    """
+
+    document = await db.scalar(
+        select(KnowledgeDocument)
+        .where(
+            KnowledgeDocument.id
+            == document_id,
+            KnowledgeDocument.tenant_id
+            == current_user.tenant_id,
+            KnowledgeDocument.deleted_at.is_(None),
+        )
+        .with_for_update()
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="文档不存在",
+        )
+
+    active_job = await db.scalar(
+        select(IngestJob)
+        .where(
+            IngestJob.document_id
+            == document_id,
+            IngestJob.tenant_id
+            == current_user.tenant_id,
+            IngestJob.status.in_(
+                ACTIVE_INGEST_STATUSES
+            ),
+        )
+        .limit(1)
+    )
+
+    if active_job is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "该文档已有正在处理的入库任务，"
+                "请等待完成后再重建"
+            ),
+        )
+
+    if not resolve_storage_path(
+        document.storage_path
+    ).exists():
+        raise HTTPException(
+            status_code=409,
+            detail="原始文件不存在，无法重建索引",
+        )
+
+    max_job_version = await db.scalar(
+        select(
+            func.max(
+                IngestJob.document_version
+            )
+        ).where(
+            IngestJob.document_id
+            == document.id,
+            IngestJob.tenant_id
+            == current_user.tenant_id,
+        )
+    )
+
+    next_version = (
+        max(
+            document.current_version,
+            max_job_version or 0,
+        )
+        + 1
+    )
+
+    job = IngestJob(
+        tenant_id=current_user.tenant_id,
+        document_id=document.id,
+        document_version=next_version,
+        storage_path=document.storage_path,
+        content_hash=document.content_hash,
+        filename=document.filename,
+        status="queued",
+    )
+    db.add(job)
+    await db.flush()
+
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action="document.reindex",
+        resource_type="knowledge_document",
+        resource_id=str(document.id),
+        summary=(
+            f"重建文档索引：{document.filename}"
+        ),
+        metadata={
+            "ingest_job_id": str(job.id),
+            "document_version": next_version,
+            "current_version": (
+                document.current_version
+            ),
+        },
+    )
+
+    await db.commit()
+
+    try:
+        await get_redis().publish(
+            "rag:ingest:wakeup",
+            str(job.id),
+        )
+
+    except Exception:
+        pass
+
+    return {
+        "document_id": str(document.id),
+        "ingest_job_id": str(job.id),
+        "document_version": next_version,
+        "current_version": (
+            document.current_version
+        ),
         "status": "queued",
     }
 
@@ -390,6 +593,9 @@ async def list_ingest_jobs(
             ),
             "document_version": (
                 job.document_version
+            ),
+            "current_version": (
+                document.current_version
             ),
             "filename": (
                 job.filename

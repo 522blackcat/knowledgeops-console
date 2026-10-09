@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.venv*/
 venv/
 
 # Frontend
@@ -25,6 +26,9 @@ uploads/
 logs/
 checkpoints/
 evaluation/results/
+labels_audit.json
+RAG生产化差距.md
+生产化差距审计.md
 
 # 编辑器
 .idea/

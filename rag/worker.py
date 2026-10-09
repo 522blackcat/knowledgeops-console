@@ -86,6 +86,7 @@ from rag.storage import (
 )
 
 from rag.vector_store import (
+    delete_document_stale_vectors,
     ensure_collection,
     upsert_vectors,
 )
@@ -361,6 +362,9 @@ async def prepare_batches(
                     text_hash=chunk_text_hash(
                         chunk.text
                     ),
+                    token_count=(
+                        chunk.token_count
+                    ),
                     source_page=(
                         chunk.source_page
                     ),
@@ -504,11 +508,14 @@ async def mark_batch_completed(
 
 async def complete_ingest_job(
     job_id: uuid.UUID,
-) -> None:
+) -> dict:
     """
     确认全部批次完成后发布文档 ready 状态。
 
     文档状态更新与任务完成在同一个事务内。
+
+    返回本次发布的版本信息，
+    供调用方在事务提交后回收旧版本向量。
     """
 
     async with session_scope() as db:
@@ -617,6 +624,63 @@ async def complete_ingest_job(
         job.lease_until = None
         job.last_error = None
 
+        published = {
+            "tenant_id": job.tenant_id,
+            "document_id": job.document_id,
+            "document_version": job.document_version,
+        }
+
+    return published
+
+
+async def prune_stale_vectors(
+    *,
+    collection_name: str,
+    tenant_id: uuid.UUID,
+    document_id: uuid.UUID,
+    current_version: int,
+) -> None:
+    """
+    发布新版本后回收该文档的旧版本向量。
+
+    失败只记录，不回滚已经完成的发布：
+    过期向量不会造成越权或错误引用，
+    PostgreSQL 复核会过滤掉它们，
+    但会长期占用向量检索的候选位。
+
+    删除条件包含 document_id 与 tenant_id，
+    不跨文档、不跨租户，可重复执行。
+    """
+
+    if current_version <= 1:
+        return
+
+    try:
+        deleted = await delete_document_stale_vectors(
+            collection_name=collection_name,
+            tenant_id=tenant_id,
+            document_id=document_id,
+            before_version=current_version,
+        )
+
+    except Exception:
+        logger.exception(
+            "stale_vector_prune_failed",
+            collection_name=collection_name,
+            tenant_id=str(tenant_id),
+            document_id=str(document_id),
+            current_version=current_version,
+        )
+        return
+
+    logger.info(
+        "stale_vectors_pruned",
+        collection_name=collection_name,
+        document_id=str(document_id),
+        current_version=current_version,
+        deleted=deleted,
+    )
+
 
 async def fail_ingest_job(
     job_id: uuid.UUID,
@@ -718,13 +782,14 @@ async def process_ingest_job(
         source,
     )
 
-    chunks = split_sections(
+    chunks = await asyncio.to_thread(
+        split_sections,
         sections,
         chunk_size=(
-            settings.rag_chunk_size
+            settings.rag_chunk_size_tokens
         ),
         overlap=(
-            settings.rag_chunk_overlap
+            settings.rag_chunk_overlap_tokens
         ),
     )
 
@@ -830,8 +895,17 @@ async def process_ingest_job(
             chunk_count=len(batch),
         )
 
-    await complete_ingest_job(
+    published = await complete_ingest_job(
         job_id
+    )
+
+    await prune_stale_vectors(
+        collection_name=(
+            context["collection_name"]
+        ),
+        tenant_id=published["tenant_id"],
+        document_id=published["document_id"],
+        current_version=published["document_version"],
     )
 
 

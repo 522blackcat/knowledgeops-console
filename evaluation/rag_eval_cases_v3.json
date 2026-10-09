@@ -1,0 +1,1308 @@
+{
+  "name": "uploaded_docs_qa_v3",
+  "description": "从上传文档的问句行自动抽样的检索评测用例。anchor_text 为文档中的问句原文，用于定位相关块。",
+  "generated_from": [
+    "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+    "梁向东_专业技能定向面试准备_v8_纯面试题版.docx"
+  ],
+  "sampling": {
+    "per_file": 80,
+    "seed": 20261007
+  },
+  "stats": {
+    "per_file": {
+      "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx": {
+        "抽取问句": 293,
+        "跨文件去重后": 293,
+        "抽样": 80
+      },
+      "梁向东_专业技能定向面试准备_v8_纯面试题版.docx": {
+        "抽取问句": 300,
+        "跨文件去重后": 300,
+        "抽样": 80
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "梁向东_项目经历专项面试-01-001",
+      "query": "人工审核 Human-in-the-loop 怎么实现？",
+      "anchor_text": "10. 人工审核 Human-in-the-loop 怎么实现？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-002",
+      "query": "最基础的权重抽奖算法怎么实现？",
+      "anchor_text": "102. 最基础的权重抽奖算法怎么实现？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-003",
+      "query": "为什么不能用 random.choice 直接抽？",
+      "anchor_text": "103. 为什么不能用 random.choice 直接抽？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-004",
+      "query": "抽奖接口如何防止用户重复请求？",
+      "anchor_text": "105. 抽奖接口如何防止用户重复请求？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-005",
+      "query": "奖品发放失败怎么办？",
+      "anchor_text": "114. 奖品发放失败怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-006",
+      "query": "后台修改用户资产如何留痕？",
+      "anchor_text": "118. 后台修改用户资产如何留痕？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-007",
+      "query": "用户提现接口最关键的安全边界是什么？",
+      "anchor_text": "121. 用户提现接口最关键的安全边界是什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-008",
+      "query": "客服查询接口如何保护用户隐私？",
+      "anchor_text": "124. 客服查询接口如何保护用户隐私？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-009",
+      "query": "后台批量操作如何设计？",
+      "anchor_text": "125. 后台批量操作如何设计？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-010",
+      "query": "如果面试官让你选一个森宇项目深挖，选哪个？",
+      "anchor_text": "140. 如果面试官让你选一个森宇项目深挖，选哪个？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-011",
+      "query": "Human-in-the-loop 为什么用 session_id？",
+      "anchor_text": "144. Human-in-the-loop 为什么用 session_id？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-012",
+      "query": "你说 RAG 匹配率 90%+，这个 90% 到底怎么算？",
+      "anchor_text": "146. 你说 RAG 匹配率 90%+，这个 90% 到底怎么算？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-013",
+      "query": "FAST Agent 怎么测试？",
+      "anchor_text": "15. FAST Agent 怎么测试？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-014",
+      "query": "如果面试官质疑：这不就是状态机套了 LLM？",
+      "anchor_text": "18. 如果面试官质疑：这不就是状态机套了 LLM？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-015",
+      "query": "FAST Allocation 原系统是什么？为什么要 Agent 化？",
+      "anchor_text": "2. FAST Allocation 原系统是什么？为什么要 Agent 化？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-016",
+      "query": "RAG 入库完整链路是什么？",
+      "anchor_text": "21. RAG 入库完整链路是什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-017",
+      "query": "为什么入库前补充关键词？",
+      "anchor_text": "23. 为什么入库前补充关键词？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-018",
+      "query": "RAG Evaluation 怎么设计？",
+      "anchor_text": "27. RAG Evaluation 怎么设计？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-019",
+      "query": "简历里的“匹配率 90%+”面试时怎么守住？",
+      "anchor_text": "28. 简历里的“匹配率 90%+”面试时怎么守住？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-020",
+      "query": "FAST Agent 的核心架构怎么描述？",
+      "anchor_text": "3. FAST Agent 的核心架构怎么描述？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-021",
+      "query": "多项目 RAG 如何做数据隔离？",
+      "anchor_text": "30. 多项目 RAG 如何做数据隔离？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-022",
+      "query": "跨项目通信协议要解决什么？",
+      "anchor_text": "32. 跨项目通信协议要解决什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-023",
+      "query": "RAG 召回不到正确文档怎么排查？",
+      "anchor_text": "34. RAG 召回不到正确文档怎么排查？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-024",
+      "query": "为什么引入 Task 表？",
+      "anchor_text": "4. 为什么引入 Task 表？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-025",
+      "query": "你在 Apple 项目里用 Terraform 做了什么？",
+      "anchor_text": "41. 你在 Apple 项目里用 Terraform 做了什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-026",
+      "query": "Terraform 创建 ECS 类服务时资源依赖怎么理解？",
+      "anchor_text": "42. Terraform 创建 ECS 类服务时资源依赖怎么理解？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-027",
+      "query": "NLB 和 ALB 的核心区别怎么回答？",
+      "anchor_text": "47. NLB 和 ALB 的核心区别怎么回答？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-028",
+      "query": "Listener 和 Target Group 在流量链路里是什么关系？",
+      "anchor_text": "48. Listener 和 Target Group 在流量链路里是什么关系？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-029",
+      "query": "如何避免两个 Pipeline 同时 terraform apply？",
+      "anchor_text": "50. 如何避免两个 Pipeline 同时 terraform apply？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-030",
+      "query": "如果新版本 Task 健康检查一直失败，你怎么处理？",
+      "anchor_text": "54. 如果新版本 Task 健康检查一直失败，你怎么处理？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-031",
+      "query": "Terraform 这段项目经验怎样回答才不会显得只是“会改配置”？",
+      "anchor_text": "55. Terraform 这段项目经验怎样回答才不会显得只是“会改配置”？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-032",
+      "query": "Partition 和 Clustering 有什么区别？",
+      "anchor_text": "59. Partition 和 Clustering 有什么区别？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-033",
+      "query": "LookML 在这个项目里解决什么？",
+      "anchor_text": "60. LookML 在这个项目里解决什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-034",
+      "query": "JOIN 为什么会把 BI 指标算大？",
+      "anchor_text": "62. JOIN 为什么会把 BI 指标算大？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-035",
+      "query": "DST 会给定时任务带来什么问题？",
+      "anchor_text": "65. DST 会给定时任务带来什么问题？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-036",
+      "query": "Scheduler 如何做可观测性？",
+      "anchor_text": "69. Scheduler 如何做可观测性？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-037",
+      "query": "如果 BigQuery 查询突然变慢怎么查？",
+      "anchor_text": "71. 如果 BigQuery 查询突然变慢怎么查？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-038",
+      "query": "如何提升一个老 Python 项目的测试覆盖率？",
+      "anchor_text": "72. 如何提升一个老 Python 项目的测试覆盖率？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-039",
+      "query": "为什么要抽公共工具库？",
+      "anchor_text": "74. 为什么要抽公共工具库？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-040",
+      "query": "文件上传服务如何防止重复文件？",
+      "anchor_text": "90. 文件上传服务如何防止重复文件？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-041",
+      "query": "XPath 怎么写得更稳定？",
+      "anchor_text": "95. XPath 怎么写得更稳定？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-042",
+      "query": "连续追问 1｜为什么不能只看最终答案准确率？",
+      "anchor_text": "连续追问 1｜为什么不能只看最终答案准确率？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-043",
+      "query": "连续追问 1｜面试官：如果每个 Query 只有一个正确 Chunk？",
+      "anchor_text": "连续追问 1｜面试官：如果每个 Query 只有一个正确 Chunk？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-044",
+      "query": "连续追问 1｜面试官：模型一直调用同一个 Tool 呢？",
+      "anchor_text": "连续追问 1｜面试官：模型一直调用同一个 Tool 呢？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-045",
+      "query": "连续追问 1｜面试官：要不要记录完整 Prompt？",
+      "anchor_text": "连续追问 1｜面试官：要不要记录完整 Prompt？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-046",
+      "query": "连续追问 2｜面试官：MRR 高说明什么？",
+      "anchor_text": "连续追问 2｜面试官：MRR 高说明什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-047",
+      "query": "连续追问 2｜面试官：Tool Result 很大怎么办？",
+      "anchor_text": "连续追问 2｜面试官：Tool Result 很大怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-048",
+      "query": "连续追问 2｜面试官：两个 Worker 同时拿到一个 Task？",
+      "anchor_text": "连续追问 2｜面试官：两个 Worker 同时拿到一个 Task？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-049",
+      "query": "连续追问 2｜面试官：正确结果被 reranker 排坏了怎么办？",
+      "anchor_text": "连续追问 2｜面试官：正确结果被 reranker 排坏了怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-050",
+      "query": "连续追问 2｜面试官：这个服务的边界是什么？",
+      "anchor_text": "连续追问 2｜面试官：这个服务的边界是什么？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-051",
+      "query": "连续追问 3｜面试官：Chunk ID 更新后 Eval Ground Truth 怎么办？",
+      "anchor_text": "连续追问 3｜面试官：Chunk ID 更新后 Eval Ground Truth 怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-052",
+      "query": "连续追问 3｜面试官：Tool 执行异常呢？",
+      "anchor_text": "连续追问 3｜面试官：Tool 执行异常呢？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-053",
+      "query": "连续追问 3｜面试官：Tool 要做到多细？",
+      "anchor_text": "连续追问 3｜面试官：Tool 要做到多细？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-054",
+      "query": "连续追问 3｜面试官：Trace 记录完整 Chunk 会怎样？",
+      "anchor_text": "连续追问 3｜面试官：Trace 记录完整 Chunk 会怎样？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-055",
+      "query": "连续追问 3｜面试官：nDCG 什么时候更有意义？",
+      "anchor_text": "连续追问 3｜面试官：nDCG 什么时候更有意义？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-056",
+      "query": "连续追问 3｜面试官：running 的 Worker 死了？",
+      "anchor_text": "连续追问 3｜面试官：running 的 Worker 死了？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-057",
+      "query": "连续追问 3｜面试官：session_id 是不是鉴权凭证？",
+      "anchor_text": "连续追问 3｜面试官：session_id 是不是鉴权凭证？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-058",
+      "query": "连续追问 3｜面试官：你怎么证明 Agent 化真的带来了价值？",
+      "anchor_text": "连续追问 3｜面试官：你怎么证明 Agent 化真的带来了价值？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-059",
+      "query": "连续追问 3｜面试官：候选多少合适？",
+      "anchor_text": "连续追问 3｜面试官：候选多少合适？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-060",
+      "query": "追问 1｜Prompt 里已经写了不能调用危险工具，为什么还要代码校验？",
+      "anchor_text": "追问 1｜Prompt 里已经写了不能调用危险工具，为什么还要代码校验？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-061",
+      "query": "追问 1｜Reranker Top30 还是太慢怎么办？",
+      "anchor_text": "追问 1｜Reranker Top30 还是太慢怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-062",
+      "query": "追问 1｜为什么 UTC-8 不够？",
+      "anchor_text": "追问 1｜为什么 UTC-8 不够？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-063",
+      "query": "追问 1｜怎么做对照实验？",
+      "anchor_text": "追问 1｜怎么做对照实验？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-064",
+      "query": "追问 1｜谁生成关键词？",
+      "anchor_text": "追问 1｜谁生成关键词？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-065",
+      "query": "追问 2｜BM25 Top30 + Vector Top30 为什么是 30？",
+      "anchor_text": "追问 2｜BM25 Top30 + Vector Top30 为什么是 30？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-066",
+      "query": "追问 2｜Overlap 越大是不是 Recall 越高？",
+      "anchor_text": "追问 2｜Overlap 越大是不是 Recall 越高？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-067",
+      "query": "追问 2｜Reranker 把正确结果从第2排到第20怎么办？",
+      "anchor_text": "追问 2｜Reranker 把正确结果从第2排到第20怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-068",
+      "query": "追问 2｜两个 Agent 同时处理一个 Task 怎么办？",
+      "anchor_text": "追问 2｜两个 Agent 同时处理一个 Task 怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-069",
+      "query": "追问 2｜为什么同一个指标两个页面不同？",
+      "anchor_text": "追问 2｜为什么同一个指标两个页面不同？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-070",
+      "query": "追问 2｜怎么降低幻觉？",
+      "anchor_text": "追问 2｜怎么降低幻觉？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-071",
+      "query": "追问 2｜扣库存失败重新抽会不会改变概率？",
+      "anchor_text": "追问 2｜扣库存失败重新抽会不会改变概率？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-072",
+      "query": "追问 2｜缓存怎么办？",
+      "anchor_text": "追问 2｜缓存怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-073",
+      "query": "追问 3｜State 丢了怎么办？",
+      "anchor_text": "追问 3｜State 丢了怎么办？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-074",
+      "query": "追问 3｜Tool 返回异常给模型会不会泄露数据库信息？",
+      "anchor_text": "追问 3｜Tool 返回异常给模型会不会泄露数据库信息？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-075",
+      "query": "追问 3｜支付回调重复十次呢？",
+      "anchor_text": "追问 3｜支付回调重复十次呢？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-076",
+      "query": "追问 3｜是不是 Reranker 越大越好？",
+      "anchor_text": "追问 3｜是不是 Reranker 越大越好？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-077",
+      "query": "追问 4｜多个 Scheduler 实例会不会重复执行？",
+      "anchor_text": "追问 4｜多个 Scheduler 实例会不会重复执行？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-078",
+      "query": "追问 4｜怎么防止为了达到 90% 把 K 调得很大？",
+      "anchor_text": "追问 4｜怎么防止为了达到 90% 把 K 调得很大？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-079",
+      "query": "面试官追加条件 2｜Redis 库存比数据库快，全部放 Redis 行不行？",
+      "anchor_text": "面试官追加条件 2｜Redis 库存比数据库快，全部放 Redis 行不行？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_项目经历专项面试-01-080",
+      "query": "面试官：这个项目为什么要单独做一个 RAG 管理平台？",
+      "anchor_text": "面试官：这个项目为什么要单独做一个 RAG 管理平台？",
+      "source_file": "梁向东_项目经历专项面试_v9_FAST_RAG模拟面试.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-001",
+      "query": "线上 API P99 延迟突然升高，你怎么排查？",
+      "anchor_text": "106. 线上 API P99 延迟突然升高，你怎么排查？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-002",
+      "query": "聚簇索引和二级索引有什么区别？",
+      "anchor_text": "108. 聚簇索引和二级索引有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-003",
+      "query": "索引为什么会失效或利用率低？",
+      "anchor_text": "111. 索引为什么会失效或利用率低？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-004",
+      "query": "乐观锁和悲观锁怎么选？",
+      "anchor_text": "121. 乐观锁和悲观锁怎么选？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-005",
+      "query": "Redis 为什么快？",
+      "anchor_text": "124. Redis 为什么快？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-006",
+      "query": "Redis RDB 和 AOF 有什么区别？",
+      "anchor_text": "127. Redis RDB 和 AOF 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-007",
+      "query": "什么是 ReAct？",
+      "anchor_text": "13. 什么是 ReAct？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-008",
+      "query": "为什么 Redis 分布式锁不能代替数据库唯一约束？",
+      "anchor_text": "130. 为什么 Redis 分布式锁不能代替数据库唯一约束？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-009",
+      "query": "MongoDB 和 MySQL 应该怎么选？",
+      "anchor_text": "134. MongoDB 和 MySQL 应该怎么选？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-010",
+      "query": "MongoDB 索引有什么需要注意？",
+      "anchor_text": "135. MongoDB 索引有什么需要注意？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-011",
+      "query": "OLTP 和 OLAP 有什么区别？",
+      "anchor_text": "137. OLTP 和 OLAP 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-012",
+      "query": "为什么分析型数据库常使用列式存储？",
+      "anchor_text": "138. 为什么分析型数据库常使用列式存储？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-013",
+      "query": "Agent Loop 应该包含哪些执行边界？",
+      "anchor_text": "14. Agent Loop 应该包含哪些执行边界？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-014",
+      "query": "ClickHouse 分区 PARTITION BY 应该怎么设计？",
+      "anchor_text": "141. ClickHouse 分区 PARTITION BY 应该怎么设计？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-015",
+      "query": "MySQL、Redis、MongoDB、ClickHouse 怎么做技术选型？",
+      "anchor_text": "146. MySQL、Redis、MongoDB、ClickHouse 怎么做技术选型？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-016",
+      "query": "Outbox Pattern 怎么解决 DB + MQ 一致性？",
+      "anchor_text": "149. Outbox Pattern 怎么解决 DB + MQ 一致性？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-017",
+      "query": "Agent Memory 是什么？和聊天历史有什么区别？",
+      "anchor_text": "15. Agent Memory 是什么？和聊天历史有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-018",
+      "query": "如何给数据库层做可观测性？",
+      "anchor_text": "151. 如何给数据库层做可观测性？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-019",
+      "query": "线上 Redis 延迟突然升高怎么排查？",
+      "anchor_text": "152. 线上 Redis 延迟突然升高怎么排查？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-020",
+      "query": "如果面试官让你现场优化一个慢查询，你的完整回答顺序是什么？",
+      "anchor_text": "156. 如果面试官让你现场优化一个慢查询，你的完整回答顺序是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-021",
+      "query": "Matplotlib 在你的技术栈里应该怎么回答？",
+      "anchor_text": "168. Matplotlib 在你的技术栈里应该怎么回答？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-022",
+      "query": "什么是 RAG？解决什么问题？",
+      "anchor_text": "17. 什么是 RAG？解决什么问题？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-023",
+      "query": "top 里 load average 是 CPU 使用率吗？",
+      "anchor_text": "177. top 里 load average 是 CPU 使用率吗？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-024",
+      "query": "Linux 中 RSS、VSZ/VIRT 分别是什么？",
+      "anchor_text": "179. Linux 中 RSS、VSZ/VIRT 分别是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-025",
+      "query": "vmstat 主要看什么？",
+      "anchor_text": "182. vmstat 主要看什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-026",
+      "query": "inode 用完会发生什么？",
+      "anchor_text": "185. inode 用完会发生什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-027",
+      "query": "TIME_WAIT 是什么？大量 TIME_WAIT 一定是故障吗？",
+      "anchor_text": "187. TIME_WAIT 是什么？大量 TIME_WAIT 一定是故障吗？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-028",
+      "query": "curl 排查 HTTP 服务应该关注什么？",
+      "anchor_text": "191. curl 排查 HTTP 服务应该关注什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-029",
+      "query": "线上接口偶发 Connection reset by peer 怎么理解？",
+      "anchor_text": "197. 线上接口偶发 Connection reset by peer 怎么理解？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-030",
+      "query": "Vector Retrieval 和 BM25 有什么区别？",
+      "anchor_text": "20. Vector Retrieval 和 BM25 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-031",
+      "query": "一条生产级 CI/CD Pipeline 应该有哪些阶段？",
+      "anchor_text": "202. 一条生产级 CI/CD Pipeline 应该有哪些阶段？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-032",
+      "query": "CI Pipeline 为什么要缓存依赖？",
+      "anchor_text": "204. CI Pipeline 为什么要缓存依赖？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-033",
+      "query": "CI 中 Secret 应该怎么管理？",
+      "anchor_text": "205. CI 中 Secret 应该怎么管理？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-034",
+      "query": "Docker 镜像和容器是什么关系？",
+      "anchor_text": "206. Docker 镜像和容器是什么关系？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-035",
+      "query": "Docker build cache 是怎么工作的？",
+      "anchor_text": "209. Docker build cache 是怎么工作的？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-036",
+      "query": "Docker ENTRYPOINT 和 CMD 有什么区别？",
+      "anchor_text": "212. Docker ENTRYPOINT 和 CMD 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-037",
+      "query": "Kubernetes Pod 是什么？",
+      "anchor_text": "215. Kubernetes Pod 是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-038",
+      "query": "为什么 Probe 配错会造成事故？",
+      "anchor_text": "220. 为什么 Probe 配错会造成事故？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-039",
+      "query": "Kubernetes RollingUpdate 中 maxSurge 和 maxUnavailable 是什么？",
+      "anchor_text": "225. Kubernetes RollingUpdate 中 maxSurge 和 maxUnavailable 是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-040",
+      "query": "Pod Pending 常见原因是什么？",
+      "anchor_text": "228. Pod Pending 常见原因是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-041",
+      "query": "ECS Service 部署新版本后任务不断被杀怎么查？",
+      "anchor_text": "236. ECS Service 部署新版本后任务不断被杀怎么查？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-042",
+      "query": "terraform plan 和 apply 分别是什么？",
+      "anchor_text": "240. terraform plan 和 apply 分别是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-043",
+      "query": "CI/CD 中数据库 Migration 应该什么时候执行？",
+      "anchor_text": "246. CI/CD 中数据库 Migration 应该什么时候执行？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-044",
+      "query": "蓝绿发布和滚动发布有什么区别？",
+      "anchor_text": "247. 蓝绿发布和滚动发布有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-045",
+      "query": "什么是 Canary Release？",
+      "anchor_text": "248. 什么是 Canary Release？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-046",
+      "query": "Ajax 的本质是什么？",
+      "anchor_text": "251. Ajax 的本质是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-047",
+      "query": "微信开发中 OAuth 基本流程是什么？",
+      "anchor_text": "260. 微信开发中 OAuth 基本流程是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-048",
+      "query": "微信回调为什么需要签名校验？",
+      "anchor_text": "261. 微信回调为什么需要签名校验？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-049",
+      "query": "微信支付回调为什么必须幂等？",
+      "anchor_text": "262. 微信支付回调为什么必须幂等？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-050",
+      "query": "监督学习和无监督学习有什么区别？",
+      "anchor_text": "263. 监督学习和无监督学习有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-051",
+      "query": "线性回归本质是什么？",
+      "anchor_text": "269. 线性回归本质是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-052",
+      "query": "Adam 和 SGD 有什么区别？",
+      "anchor_text": "280. Adam 和 SGD 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-053",
+      "query": "Embedding 是什么？",
+      "anchor_text": "287. Embedding 是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-054",
+      "query": "为什么可变默认参数危险？",
+      "anchor_text": "29. 为什么可变默认参数危险？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-055",
+      "query": "如果面试官问你『会 PyTorch 到什么程度』，应该怎么回答？",
+      "anchor_text": "290. 如果面试官问你『会 PyTorch 到什么程度』，应该怎么回答？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-056",
+      "query": "为什么模型离线指标很好，上线效果却差？",
+      "anchor_text": "294. 为什么模型离线指标很好，上线效果却差？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-057",
+      "query": "如果你不是算法工程师，为什么简历还可以写机器学习/PyTorch？",
+      "anchor_text": "299. 如果你不是算法工程师，为什么简历还可以写机器学习/PyTorch？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-058",
+      "query": "什么是责任链模式？",
+      "anchor_text": "3. 什么是责任链模式？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-059",
+      "query": "浅拷贝和深拷贝有什么区别？",
+      "anchor_text": "30. 浅拷贝和深拷贝有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-060",
+      "query": "Python 参数传递到底是值传递还是引用传递？",
+      "anchor_text": "32. Python 参数传递到底是值传递还是引用传递？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-061",
+      "query": "*args 和 **kwargs 的底层含义是什么？",
+      "anchor_text": "33. *args 和 **kwargs 的底层含义是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-062",
+      "query": "Context Manager 是什么？with 为什么能自动释放资源？",
+      "anchor_text": "37. Context Manager 是什么？with 为什么能自动释放资源？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-063",
+      "query": "GIL 是什么？它解决了什么，又限制了什么？",
+      "anchor_text": "44. GIL 是什么？它解决了什么，又限制了什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-064",
+      "query": "fork、spawn 有什么区别？",
+      "anchor_text": "50. fork、spawn 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-065",
+      "query": "什么是 hashable？为什么 list 不能作为 dict key？",
+      "anchor_text": "61. 什么是 hashable？为什么 list 不能作为 dict key？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-066",
+      "query": "WSGI 和 ASGI 有什么区别？",
+      "anchor_text": "67. WSGI 和 ASGI 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-067",
+      "query": "你简历写 Vibe Coding，是不是主要让 AI 帮你写代码？",
+      "anchor_text": "7. 你简历写 Vibe Coding，是不是主要让 AI 帮你写代码？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-068",
+      "query": "什么是 N+1 查询？Django 怎么解决？",
+      "anchor_text": "71. 什么是 N+1 查询？Django 怎么解决？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-069",
+      "query": "Django transaction.atomic 做什么？",
+      "anchor_text": "72. Django transaction.atomic 做什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-070",
+      "query": "select_for_update 是什么？什么时候使用？",
+      "anchor_text": "73. select_for_update 是什么？什么时候使用？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-071",
+      "query": "Django ORM 的 bulk_create / bulk_update 有什么取舍？",
+      "anchor_text": "74. Django ORM 的 bulk_create / bulk_update 有什么取舍？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-072",
+      "query": "Django ORM 如何避免只取少数字段却加载整行？",
+      "anchor_text": "75. Django ORM 如何避免只取少数字段却加载整行？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-073",
+      "query": "Django signal 适合什么，不适合什么？",
+      "anchor_text": "77. Django signal 适合什么，不适合什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-074",
+      "query": "FastAPI 为什么适合 API 服务？",
+      "anchor_text": "85. FastAPI 为什么适合 API 服务？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-075",
+      "query": "FastAPI Depends 的底层价值是什么？",
+      "anchor_text": "87. FastAPI Depends 的底层价值是什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-076",
+      "query": "Pydantic Validation 能替代业务校验吗？",
+      "anchor_text": "88. Pydantic Validation 能替代业务校验吗？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-077",
+      "query": "FastAPI BackgroundTasks 适合什么任务？",
+      "anchor_text": "89. FastAPI BackgroundTasks 适合什么任务？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-078",
+      "query": "FastAPI 如何实现 SSE？与 WebSocket 有什么区别？",
+      "anchor_text": "90. FastAPI 如何实现 SSE？与 WebSocket 有什么区别？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-079",
+      "query": "Django ORM 和 SQLAlchemy 的主要思路差异怎么回答？",
+      "anchor_text": "96. Django ORM 和 SQLAlchemy 的主要思路差异怎么回答？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    },
+    {
+      "id": "梁向东_专业技能定向面试-02-080",
+      "query": "DRF Serializer 做什么？",
+      "anchor_text": "97. DRF Serializer 做什么？",
+      "source_file": "梁向东_专业技能定向面试准备_v8_纯面试题版.docx",
+      "knowledge_scope": "global",
+      "min_hits": 1
+    }
+  ]
+}

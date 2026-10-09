@@ -91,7 +91,7 @@ async def complete_run_with_messages(
     """
 
     async with session_scope() as db:
-        run = await db.scalar(
+        result = await db.execute(
             select(AgentRun)
             .where(
                 AgentRun.id == run_id,
@@ -101,9 +101,17 @@ async def complete_run_with_messages(
             )
             .with_for_update()
         )
+        run = result.scalar_one_or_none()
 
         if run is None:
             return False
+
+        prompt_version = str(
+            (metadata or {}).get(
+                "prompt_version",
+                "v1",
+            )
+        )
 
         # append_message() 会锁定 Conversation，
         # 因此同一会话的序号分配保持串行。
@@ -141,6 +149,7 @@ async def complete_run_with_messages(
                     "run_id": str(
                         run.id
                     ),
+                    "prompt_version": prompt_version,
                 },
             )
 
@@ -200,6 +209,30 @@ async def complete_run_with_messages(
             payload={
                 "status": "completed",
                 "answer": answer,
+                "metadata": metadata or {},
+                "run_timing": (
+                    (metadata or {}).get(
+                        "run_timing",
+                        {},
+                    )
+                ),
+            },
+        )
+        await append_run_event(
+            db,
+            tenant_id=run.tenant_id,
+            run_id=run.id,
+            event_type="run.stage",
+            payload={
+                "stage": "completed",
+                "status": "completed",
+                "message": "回答已完成",
+                "run_timing": (
+                    (metadata or {}).get(
+                        "run_timing",
+                        {},
+                    )
+                ),
             },
         )
 

@@ -20,6 +20,8 @@ from app.dependencies import (
     require_permission,
 )
 
+from app.audit import write_audit_log
+
 from app.rbac import Permission
 
 from app.schemas import (
@@ -48,6 +50,103 @@ router = APIRouter(
 )
 
 
+def ensure_prompt_version(
+    configuration: dict | None,
+) -> dict:
+    """Return a config with a stable prompt_version."""
+
+    config = dict(configuration or {})
+    config.setdefault("prompt_version", "v1")
+    return config
+
+
+def bump_prompt_version(
+    value: str | None,
+) -> str:
+    """Increment simple vN prompt versions."""
+
+    clean = str(value or "v1").strip()
+
+    if clean.startswith("v") and clean[1:].isdigit():
+        return f"v{int(clean[1:]) + 1}"
+
+    return f"{clean}+1"
+
+
+AUDITED_CONFIGURATION_KEYS = (
+    "system_prompt",
+    "prompt_version",
+    "knowledge_scope",
+    "knowledge_base_ids",
+    "retrieval_mode",
+    "allowed_tools",
+)
+
+
+def changed_fields(
+    before: dict,
+    after: dict,
+    keys: tuple[str, ...],
+) -> dict:
+    """Build a compact before/after diff for selected keys."""
+
+    diff = {}
+
+    for key in keys:
+        old = before.get(key)
+        new = after.get(key)
+
+        if old != new:
+            diff[key] = {
+                "before": old,
+                "after": new,
+            }
+
+    return diff
+
+
+def agent_audit_changes(
+    *,
+    before: dict,
+    after: AgentDefinition,
+) -> dict:
+    """Return structured changes for an Agent update audit log."""
+
+    top_level = changed_fields(
+        before,
+        {
+            "name": after.name,
+            "description": after.description,
+            "agent_type": after.agent_type,
+            "status": after.status,
+        },
+        (
+            "name",
+            "description",
+            "agent_type",
+            "status",
+        ),
+    )
+
+    configuration_diff = changed_fields(
+        before.get("configuration", {}),
+        after.configuration or {},
+        AUDITED_CONFIGURATION_KEYS,
+    )
+
+    return {
+        "fields": top_level,
+        "configuration": configuration_diff,
+        "changed_keys": sorted([
+            *top_level.keys(),
+            *(
+                f"configuration.{key}"
+                for key in configuration_diff.keys()
+            ),
+        ]),
+    }
+
+
 @router.post(
     "/agents",
     response_model=AgentResponse,
@@ -69,11 +168,28 @@ async def create_agent(
         name=body.name,
         description=body.description,
         agent_type=body.agent_type,
-        configuration=body.configuration,
+        configuration=ensure_prompt_version(
+            body.configuration
+        ),
         status="idle",
     )
 
     db.add(agent)
+
+    await db.flush()
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action="agent.create",
+        resource_type="agent",
+        resource_id=str(agent.id),
+        summary=f"创建 Agent：{agent.name}",
+        metadata={
+            "name": agent.name,
+            "agent_type": agent.agent_type,
+            "configuration": agent.configuration,
+        },
+    )
 
     await db.commit()
     await db.refresh(agent)
@@ -142,6 +258,16 @@ async def update_agent(
             detail="Agent 不存在",
         )
 
+    before = {
+        "name": agent.name,
+        "description": agent.description,
+        "agent_type": agent.agent_type,
+        "status": agent.status,
+        "configuration": dict(
+            agent.configuration or {}
+        ),
+    }
+
     if body.name is not None:
         agent.name = body.name
 
@@ -152,7 +278,35 @@ async def update_agent(
         agent.agent_type = body.agent_type
 
     if body.configuration is not None:
-        agent.configuration = body.configuration
+        previous_configuration = dict(
+            agent.configuration or {}
+        )
+        next_configuration = ensure_prompt_version(
+            body.configuration
+        )
+
+        if (
+            next_configuration.get("system_prompt")
+            != previous_configuration.get(
+                "system_prompt"
+            )
+            and next_configuration.get(
+                "prompt_version"
+            )
+            == previous_configuration.get(
+                "prompt_version",
+                "v1",
+            )
+        ):
+            next_configuration["prompt_version"] = (
+                bump_prompt_version(
+                    previous_configuration.get(
+                        "prompt_version"
+                    )
+                )
+            )
+
+        agent.configuration = next_configuration
 
     if body.status is not None:
         if body.status not in {
@@ -164,6 +318,31 @@ async def update_agent(
                 detail="status 只能是 idle 或 disabled",
             )
         agent.status = body.status
+
+    changes = agent_audit_changes(
+        before=before,
+        after=agent,
+    )
+
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action="agent.update",
+        resource_type="agent",
+        resource_id=str(agent.id),
+        summary=f"修改 Agent：{agent.name}",
+        metadata={
+            "name": agent.name,
+            "description": agent.description,
+            "agent_type": agent.agent_type,
+            "status": agent.status,
+            "configuration": agent.configuration,
+            "changes": changes,
+            "configuration_diff": (
+                changes["configuration"]
+            ),
+        },
+    )
 
     await db.commit()
     await db.refresh(agent)

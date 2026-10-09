@@ -1,19 +1,26 @@
 """
 文档分块。
 
-优先按照段落切分，再对超长段落做字符窗口切分。
+优先按照段落打包，再对超长段落做窗口切分。
 
-当前 chunk_size 使用字符数，不是精确 Token 数。
-后续可以根据不同 Embedding 模型的 tokenizer
-替换长度计算函数。
+chunk_size 与 overlap 的单位都是 Token，
+按 Embedding 模型的 tokenizer 计数，
+切分点落在 Token 边界上，不按字符硬截。
 """
 
 from dataclasses import dataclass
 
 from rag.parser import ParsedSection
+from rag.tokenizer import (
+    token_length,
+    token_offsets,
+)
 
 
-QUESTION_SECTION_CHUNK_SIZE = 3000
+# 题库式小节过去的口径是 3000 字符窗口。
+# 实测 BGE-M3 约 0.556 Token/字符，
+# 这里换成等长的 Token 预算，只换单位不换策略。
+QUESTION_SECTION_CHUNK_TOKENS = 1600
 
 
 @dataclass(frozen=True)
@@ -22,6 +29,7 @@ class TextChunk:
 
     chunk_index: int
     text: str
+    token_count: int
     source_page: int | None
     metadata: dict
 
@@ -49,29 +57,49 @@ def split_long_text(
     if not normalized:
         return []
 
-    if len(normalized) <= chunk_size:
+    offsets = token_offsets(normalized)
+
+    total_tokens = len(offsets)
+
+    if total_tokens <= chunk_size:
         return [normalized]
 
     step = chunk_size - overlap
 
-    chunks = []
+    chunks: list[str] = []
 
     for start in range(
         0,
-        len(normalized),
+        total_tokens,
         step,
     ):
+        end = min(
+            start + chunk_size,
+            total_tokens,
+        )
+
         part = normalized[
-            start:start + chunk_size
-        ].strip()
+            offsets[start][0]:offsets[end - 1][1]
+        ]
+
+        # 按 Token 下标取出的字符区间重新计数可能多出 1 个：
+        # 切点落在词内时 BPE 合并结果会变。
+        # 所以以实测值为准回退到预算内，
+        # 被回退的那个 Token 会由下一块的overlap 接住。
+        while True:
+            inner_offsets = token_offsets(part)
+
+            if len(inner_offsets) <= chunk_size:
+                break
+
+            part = part[: inner_offsets[chunk_size][0]]
+
+        part = part.strip()
 
         if part:
             chunks.append(part)
 
-        if (
-            start + chunk_size
-            >= len(normalized)
-        ):
+        if end >= total_tokens:
             break
 
     return chunks
@@ -99,7 +127,7 @@ def split_sections(
         section_chunk_size = (
             max(
                 chunk_size,
-                QUESTION_SECTION_CHUNK_SIZE,
+                QUESTION_SECTION_CHUNK_TOKENS,
             )
             if section_metadata.get("heading")
             else chunk_size
@@ -132,6 +160,9 @@ def split_sections(
                     TextChunk(
                         chunk_index=len(chunks),
                         text=part,
+                        token_count=token_length(
+                            part
+                        ),
                         source_page=(
                             section.source_page
                         ),
@@ -150,13 +181,19 @@ def split_sections(
                 else paragraph
             )
 
-            if len(candidate) <= section_chunk_size:
+            if (
+                token_length(candidate)
+                <= section_chunk_size
+            ):
                 current = candidate
                 continue
 
             flush_current()
 
-            if len(paragraph) > section_chunk_size:
+            if (
+                token_length(paragraph)
+                > section_chunk_size
+            ):
                 for part in split_long_text(
                     paragraph,
                     chunk_size=section_chunk_size,
@@ -166,11 +203,14 @@ def split_sections(
                         TextChunk(
                             chunk_index=len(chunks),
                             text=part,
+                            token_count=token_length(
+                                part
+                            ),
                             source_page=(
                                 section.source_page
                             ),
                             metadata=(
-                            section_metadata
+                                section_metadata
                             ),
                         )
                     )

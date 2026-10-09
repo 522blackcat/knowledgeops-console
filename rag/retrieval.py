@@ -14,6 +14,7 @@ RRF 不直接比较 BM25 与向量分数，
 """
 
 import asyncio
+import time
 import uuid
 
 from dataclasses import dataclass
@@ -22,6 +23,14 @@ from sqlalchemy import select
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
+)
+
+from infrastructure.config import (
+    get_settings,
+)
+
+from infrastructure.logging import (
+    get_logger,
 )
 
 from infrastructure.models import (
@@ -44,6 +53,11 @@ from rag.reranker import (
 
 from rag.vector_store import (
     search_vectors,
+)
+
+
+logger = get_logger(
+    "rag.retrieval"
 )
 
 
@@ -104,11 +118,12 @@ async def hybrid_retrieve(
     tenant_id: uuid.UUID,
     knowledge_base_id: uuid.UUID,
     query: str,
-    vector_limit: int = 30,
-    bm25_limit: int = 30,
-    rerank_limit: int = 12,
-    final_limit: int = 6,
+    vector_limit: int | None = None,
+    bm25_limit: int | None = None,
+    rerank_limit: int | None = None,
+    final_limit: int | None = None,
     use_reranker: bool = True,
+    min_score: float | None = None,
 ) -> list[RetrievedChunk]:
     """
     当前租户指定知识库的混合检索。
@@ -116,7 +131,30 @@ async def hybrid_retrieve(
     所有候选 Chunk 最终再次通过 PostgreSQL
     校验 tenant_id、文档状态和文档版本，
     不直接信任 Qdrant payload。
+
+    漏斗深度与 RRF k 未显式传入时读取配置。
+    min_score 仅在启用 Reranker 时按交叉编码器分数生效。
     """
+
+    settings = get_settings()
+
+    if vector_limit is None:
+        vector_limit = settings.rag_vector_limit
+
+    if bm25_limit is None:
+        bm25_limit = settings.rag_bm25_limit
+
+    if rerank_limit is None:
+        rerank_limit = settings.rag_rerank_limit
+
+    if final_limit is None:
+        final_limit = settings.rag_final_limit
+
+    if min_score is None:
+        min_score = settings.rag_min_score
+
+    total_started = time.perf_counter()
+    stage_ms: dict[str, float] = {}
 
     knowledge_base = await db.scalar(
         select(KnowledgeBase).where(
@@ -132,10 +170,19 @@ async def hybrid_retrieve(
             "知识库不存在或不属于当前租户"
         )
 
+    stage_started = time.perf_counter()
+
     query_vector = await asyncio.to_thread(
         embed_query,
         query,
     )
+
+    stage_ms["embed"] = round(
+        (time.perf_counter() - stage_started) * 1000,
+        1,
+    )
+
+    stage_started = time.perf_counter()
 
     vector_hits = await search_vectors(
         collection_name=(
@@ -146,12 +193,24 @@ async def hybrid_retrieve(
         limit=vector_limit,
     )
 
+    stage_ms["vector_search"] = round(
+        (time.perf_counter() - stage_started) * 1000,
+        1,
+    )
+
+    stage_started = time.perf_counter()
+
     bm25_hits = await bm25_search(
         db,
         tenant_id=tenant_id,
         knowledge_base_id=knowledge_base_id,
         query=query,
         limit=bm25_limit,
+    )
+
+    stage_ms["bm25_search"] = round(
+        (time.perf_counter() - stage_started) * 1000,
+        1,
     )
 
     vector_ids = []
@@ -170,10 +229,15 @@ async def hybrid_retrieve(
         for hit in bm25_hits
     ]
 
-    fused = reciprocal_rank_fusion([
-        vector_ids,
-        bm25_ids,
-    ])
+    stage_started = time.perf_counter()
+
+    fused = reciprocal_rank_fusion(
+        [
+            vector_ids,
+            bm25_ids,
+        ],
+        k=settings.rag_rrf_k,
+    )
 
     candidate_ids = [
         chunk_id
@@ -182,60 +246,144 @@ async def hybrid_retrieve(
         )
     ]
 
-    if not candidate_ids:
-        return []
-
-    result = await db.execute(
-        select(
-            DocumentChunk,
-            KnowledgeDocument,
-        )
-        .join(
-            KnowledgeDocument,
-            DocumentChunk.document_id
-            == KnowledgeDocument.id,
-        )
-        .where(
-            DocumentChunk.id.in_(
-                candidate_ids
-            ),
-            DocumentChunk.tenant_id
-            == tenant_id,
-            KnowledgeDocument.tenant_id
-            == tenant_id,
-            KnowledgeDocument.knowledge_base_id
-            == knowledge_base_id,
-            KnowledgeDocument.status == "ready",
-            KnowledgeDocument.deleted_at.is_(None),
-            DocumentChunk.document_version
-            == KnowledgeDocument.current_version,
-        )
+    stage_ms["fusion"] = round(
+        (time.perf_counter() - stage_started) * 1000,
+        1,
     )
 
-    rows = result.all()
+    ordered_rows: list[
+        tuple[DocumentChunk, KnowledgeDocument]
+    ] = []
 
-    row_map = {
-        chunk.id: (
-            chunk,
-            document,
+    stage_started = time.perf_counter()
+
+    if candidate_ids:
+        result = await db.execute(
+            select(
+                DocumentChunk,
+                KnowledgeDocument,
+            )
+            .join(
+                KnowledgeDocument,
+                DocumentChunk.document_id
+                == KnowledgeDocument.id,
+            )
+            .where(
+                DocumentChunk.id.in_(
+                    candidate_ids
+                ),
+                DocumentChunk.tenant_id
+                == tenant_id,
+                KnowledgeDocument.tenant_id
+                == tenant_id,
+                KnowledgeDocument.knowledge_base_id
+                == knowledge_base_id,
+                KnowledgeDocument.status == "ready",
+                KnowledgeDocument.deleted_at.is_(None),
+                DocumentChunk.document_version
+                == KnowledgeDocument.current_version,
+            )
         )
-        for chunk, document in rows
-    }
 
-    ordered_rows = [
-        row_map[chunk_id]
-        for chunk_id in candidate_ids
-        if chunk_id in row_map
-    ]
+        rows = result.all()
 
-    if not ordered_rows:
-        return []
+        row_map = {
+            chunk.id: (
+                chunk,
+                document,
+            )
+            for chunk, document in rows
+        }
 
-    if not use_reranker:
+        ordered_rows = [
+            row_map[chunk_id]
+            for chunk_id in candidate_ids
+            if chunk_id in row_map
+        ]
+
+    stage_ms["revalidate"] = round(
+        (time.perf_counter() - stage_started) * 1000,
+        1,
+    )
+
+    dropped_by_revalidation = (
+        len(candidate_ids) - len(ordered_rows)
+    )
+
+    results: list[RetrievedChunk] = []
+
+    if ordered_rows and use_reranker:
+        stage_started = time.perf_counter()
+
+        scores = await asyncio.to_thread(
+            rerank,
+            query=query,
+            texts=[
+                chunk.text
+                for chunk, _ in ordered_rows
+            ],
+        )
+
+        ranked = sorted(
+            zip(
+                ordered_rows,
+                scores,
+            ),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+
+        if min_score is not None:
+            ranked = [
+                item
+                for item in ranked
+                if float(item[1]) >= min_score
+            ]
+
+        results = [
+            RetrievedChunk(
+                chunk_id=chunk.id,
+                document_id=document.id,
+                text=chunk.text,
+                source_page=chunk.source_page,
+                score=float(score),
+                metadata={
+                    "knowledge_base_id": str(
+                        knowledge_base.id
+                    ),
+                    "knowledge_base_name": (
+                        knowledge_base.name
+                    ),
+                    "knowledge_base_scope": (
+                        knowledge_base.scope
+                    ),
+                    "filename": document.filename,
+                    "external_id": document.external_id,
+                    "document_version": (
+                        chunk.document_version
+                    ),
+                    "current_version": (
+                        document.current_version
+                    ),
+                    **chunk.metadata_json,
+                },
+            )
+            for (
+                (chunk, document),
+                score,
+            ) in ranked[:final_limit]
+        ]
+
+        stage_ms["rerank"] = round(
+            (time.perf_counter() - stage_started) * 1000,
+            1,
+        )
+
+    elif ordered_rows:
         fused_scores = dict(
             fused
         )
-        return [
+        results = [
             RetrievedChunk(
                 chunk_id=chunk.id,
                 document_id=document.id,
@@ -248,8 +396,23 @@ async def hybrid_retrieve(
                     )
                 ),
                 metadata={
+                    "knowledge_base_id": str(
+                        knowledge_base.id
+                    ),
+                    "knowledge_base_name": (
+                        knowledge_base.name
+                    ),
+                    "knowledge_base_scope": (
+                        knowledge_base.scope
+                    ),
                     "filename": document.filename,
                     "external_id": document.external_id,
+                    "document_version": (
+                        chunk.document_version
+                    ),
+                    "current_version": (
+                        document.current_version
+                    ),
                     **chunk.metadata_json,
                 },
             )
@@ -258,39 +421,50 @@ async def hybrid_retrieve(
             ]
         ]
 
-    scores = await asyncio.to_thread(
-        rerank,
-        query=query,
-        texts=[
-            chunk.text
-            for chunk, _ in ordered_rows
-        ],
+    total_ms = round(
+        (time.perf_counter() - total_started) * 1000,
+        1,
     )
 
-    ranked = sorted(
-        zip(
-            ordered_rows,
-            scores,
-        ),
-        key=lambda item: item[1],
-        reverse=True,
-    )
-
-    return [
-        RetrievedChunk(
-            chunk_id=chunk.id,
-            document_id=document.id,
-            text=chunk.text,
-            source_page=chunk.source_page,
-            score=float(score),
-            metadata={
-                "filename": document.filename,
-                "external_id": document.external_id,
-                **chunk.metadata_json,
-            },
+    for result in results:
+        result.metadata["retrieval_stage_ms"] = stage_ms
+        result.metadata["retrieval_total_ms"] = total_ms
+        result.metadata["vector_hits"] = len(vector_ids)
+        result.metadata["bm25_hits"] = len(bm25_ids)
+        result.metadata["fused_hits"] = len(fused)
+        result.metadata["candidate_hits"] = len(candidate_ids)
+        result.metadata["dropped_by_revalidation"] = (
+            dropped_by_revalidation
         )
-        for (
-            (chunk, document),
-            score,
-        ) in ranked[:final_limit]
-    ]
+
+    log_fields = {
+        "tenant_id": str(tenant_id),
+        "knowledge_base_id": str(
+            knowledge_base_id
+        ),
+        "query_chars": len(query),
+        "vector_hits": len(vector_ids),
+        "bm25_hits": len(bm25_ids),
+        "fused": len(fused),
+        "candidates": len(candidate_ids),
+        "dropped_by_revalidation": (
+            dropped_by_revalidation
+        ),
+        "returned": len(results),
+        "used_reranker": use_reranker,
+        "stage_ms": stage_ms,
+        "total_ms": total_ms,
+    }
+
+    if results:
+        logger.info(
+            "rag_retrieval_finished",
+            **log_fields,
+        )
+    else:
+        logger.warning(
+            "rag_retrieval_empty",
+            **log_fields,
+        )
+
+    return results

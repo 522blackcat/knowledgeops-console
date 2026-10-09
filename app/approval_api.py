@@ -32,6 +32,8 @@ from agent.events import (
     notify_run_event,
 )
 
+from app.audit import write_audit_log
+
 from app.dependencies import (
     CurrentUser,
     require_permission,
@@ -84,6 +86,35 @@ async def list_pending_approvals(
         )
         .order_by(
             ApprovalRequest.created_at.asc()
+        )
+        .limit(100)
+    )
+
+    return result.scalars().all()
+
+
+@router.get(
+    "/recent",
+    response_model=list[ApprovalResponse],
+)
+async def list_recent_approvals(
+    current_user: CurrentUser = Depends(
+        require_permission(
+            Permission.APPROVAL_READ
+        )
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    """读取当前租户最近的审批请求，包含已处理记录。"""
+
+    result = await db.execute(
+        select(ApprovalRequest)
+        .where(
+            ApprovalRequest.tenant_id
+            == current_user.tenant_id,
+        )
+        .order_by(
+            ApprovalRequest.created_at.desc()
         )
         .limit(100)
     )
@@ -150,6 +181,13 @@ async def decide_approval(
     approval.reviewed_by = current_user.id
     approval.review_reason = reason
     approval.reviewed_at = utc_now()
+    approval_wait_ms = int(
+        (
+            approval.reviewed_at
+            - approval.created_at
+        ).total_seconds()
+        * 1000
+    )
 
     # 拒绝也需要恢复 LangGraph，
     # 由图中的审批节点决定后续行为。
@@ -168,6 +206,26 @@ async def decide_approval(
             ),
             "tool_name": approval.tool_name,
             "decision": decision,
+            "approval_wait_ms": approval_wait_ms,
+        },
+    )
+
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action=f"approval.{decision}",
+        resource_type="approval_request",
+        resource_id=str(approval.id),
+        summary=(
+            f"{'批准' if decision == 'approved' else '拒绝'}"
+            f"工具调用：{approval.tool_name}"
+        ),
+        metadata={
+            "run_id": str(run.id),
+            "tool_name": approval.tool_name,
+            "decision": decision,
+            "approval_wait_ms": approval_wait_ms,
+            "reason": reason,
         },
     )
 

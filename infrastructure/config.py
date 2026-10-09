@@ -156,17 +156,20 @@ class Settings(BaseSettings):
 
     rag_model_local_files_only: bool = True
 
+    rag_retrieval_url: str = ""
+
     rag_collection_prefix: str = (
         "agent_knowledge"
     )
 
-    rag_chunk_size: int = Field(
-        default=800,
+    # 分块预算单位为 Token，由 Embedding 模型的 tokenizer 计数。
+    rag_chunk_size_tokens: int = Field(
+        default=500,
         ge=100,
     )
 
-    rag_chunk_overlap: int = Field(
-        default=120,
+    rag_chunk_overlap_tokens: int = Field(
+        default=50,
         ge=0,
     )
 
@@ -178,6 +181,71 @@ class Settings(BaseSettings):
     rag_qdrant_upsert_batch_size: int = Field(
         default=128,
         ge=1,
+    )
+
+    # ------------------------------
+    # 检索漏斗
+    # ------------------------------
+
+    rag_vector_limit: int = Field(
+        default=30,
+        ge=1,
+    )
+
+    rag_bm25_limit: int = Field(
+        default=30,
+        ge=1,
+    )
+
+    rag_rerank_limit: int = Field(
+        default=12,
+        ge=1,
+    )
+
+    rag_final_limit: int = Field(
+        default=8,
+        ge=1,
+    )
+
+    rag_context_top_k: int = Field(
+        default=5,
+        ge=1,
+    )
+
+    rag_display_top_k: int = Field(
+        default=8,
+        ge=1,
+    )
+
+    rag_rrf_k: int = Field(
+        default=60,
+        ge=1,
+    )
+
+    rag_bm25_max_chunks: int = Field(
+        default=20000,
+        ge=1,
+    )
+
+    # 为空表示不做分数截断。
+    # 仅在启用 Reranker 时按交叉编码器分数生效。
+    rag_min_score: float | None = 0.35
+
+    rag_relative_score_ratio: float = Field(
+        default=0.45,
+        ge=0,
+        le=1,
+    )
+
+    rag_retrieval_mode: Literal[
+        "auto",
+        "always",
+        "never",
+    ] = "auto"
+
+    qdrant_timeout_seconds: float = Field(
+        default=30,
+        gt=0,
     )
 
     ingest_worker_concurrency: int = Field(
@@ -305,12 +373,47 @@ class Settings(BaseSettings):
         """启动前校验关键配置。"""
 
         if (
-            self.rag_chunk_overlap
-            >= self.rag_chunk_size
+            self.rag_chunk_overlap_tokens
+            >= self.rag_chunk_size_tokens
         ):
             raise ValueError(
-                "RAG_CHUNK_OVERLAP 必须小于 "
-                "RAG_CHUNK_SIZE"
+                "RAG_CHUNK_OVERLAP_TOKENS 必须小于 "
+                "RAG_CHUNK_SIZE_TOKENS"
+            )
+
+        if (
+            self.rag_final_limit
+            > self.rag_rerank_limit
+        ):
+            raise ValueError(
+                "RAG_FINAL_LIMIT 不能大于 "
+                "RAG_RERANK_LIMIT，"
+                "否则重排候选不足，"
+                "返回条数会静默缩水"
+            )
+
+        if self.rag_context_top_k > self.rag_final_limit:
+            raise ValueError(
+                "RAG_CONTEXT_TOP_K 不能大于 "
+                "RAG_FINAL_LIMIT"
+            )
+
+        if self.rag_display_top_k > self.rag_final_limit:
+            raise ValueError(
+                "RAG_DISPLAY_TOP_K 不能大于 "
+                "RAG_FINAL_LIMIT"
+            )
+
+        if (
+            self.rag_rerank_limit
+            > (
+                self.rag_vector_limit
+                + self.rag_bm25_limit
+            )
+        ):
+            raise ValueError(
+                "RAG_RERANK_LIMIT 超过两路候选之和，"
+                "多出的名额没有实际候选"
             )
 
         if (

@@ -23,6 +23,11 @@
 - 管理员工作台：查看用户、队列和主要数据表。
 - Eval：提供 50 条 RAG 检索评测用例，输出 JSON、CSV 和 Markdown 报告。
 
+## 运维文档
+
+- 日常启动、迁移、备份和排障：[docs/OPERATIONS.md](docs/OPERATIONS.md)
+- 上线前补缺、回归和故障复盘：[docs/PRODUCTION_GAP_RUNBOOK.md](docs/PRODUCTION_GAP_RUNBOOK.md)
+
 ## 技术栈
 
 - Python 3.11
@@ -45,6 +50,7 @@
 ├── agent/                 # Agent 图、运行、审批和事件逻辑
 ├── alembic/               # 数据库迁移
 ├── app/                   # FastAPI 路由和 API
+├── docs/                  # 运维和部署文档
 ├── evaluation/            # RAG eval cases、runner 和结果说明
 ├── frontend/              # Vue 前端
 ├── infrastructure/        # 配置、数据库、模型客户端、Redis
@@ -150,6 +156,22 @@ docker compose up -d --build frontend
 docker compose up -d --build api agent-worker rag-worker
 ```
 
+## 运维手册
+
+完整部署、迁移、重建、模型缓存、RAG eval、审计、备份和排障流程见：
+
+```text
+docs/OPERATIONS.md
+```
+
+角色权限矩阵见：
+
+```text
+docs/RBAC.md
+```
+
+这份手册更适合按步骤执行；README 只保留快速启动和功能说明。
+
 ## RAG 模型预热
 
 项目默认让业务服务优先从本地 Docker 模型缓存加载 embedding / reranker，避免 Worker 在正常运行时反复访问 HuggingFace。
@@ -175,6 +197,33 @@ project_hf_models
 ```
 
 普通重启或重建镜像不会删除已下载模型。
+
+## RAG 检索策略
+
+Agent 默认使用 `RAG_RETRIEVAL_MODE=auto`，不是每轮强制检索：
+
+- 未绑定知识库：不检索。
+- 闲聊、助手身份类问题：不检索。
+- 明确要求根据知识库、文档、资料、制度或项目回答：检索。
+- 其他已绑定知识库的业务/技术问题：检索，避免漏掉项目资料。
+
+检索后会过滤低质量命中：
+
+```env
+RAG_MIN_SCORE=0.35
+RAG_RELATIVE_SCORE_RATIO=0.45
+RAG_CONTEXT_TOP_K=5
+RAG_DISPLAY_TOP_K=8
+```
+
+含义：
+
+- `RAG_MIN_SCORE`：低于该分数的证据不进入回答上下文，也不展示。
+- `RAG_RELATIVE_SCORE_RATIO`：证据分数还必须不低于 `top_score * ratio`。
+- `RAG_CONTEXT_TOP_K`：最多喂给模型的可靠证据数。
+- `RAG_DISPLAY_TOP_K`：最多展示给用户看的可靠命中数。
+
+如果检索结果都低于阈值，系统会记录“未找到足够可靠的知识库依据”，不会硬塞低质量片段给模型。
 
 ## RAG Eval
 
@@ -210,9 +259,15 @@ evaluation/results/
 
 每次运行会生成：
 
-- JSON 明细
-- CSV 表格
-- Markdown 摘要
+- JSON 明细，含 `summary.rank_metrics`：按锚点真实名次算出的 hit@1/3/5、MRR、
+  名次直方图与 miss 用例 ID
+- CSV 表格，每条用例一行，含 `anchor_rank` 列
+- Markdown 摘要，开头同步列出上述指标
+
+容器里跑要用默认输出目录把报告留在宿主：compose 已把 `./evaluation/results`
+挂进 `api` 与 `rag-eval`，不传 `--output-dir` 就会落在仓库的 `evaluation/results/`。
+注意 `pass_rate` 判的是"锚点出现在返回的整页结果里"，等价 hit@返回条数，
+只看它会藏掉首条精度；`rank_metrics` 才是分块与融合调参的目标数。
 
 ## 数据持久化
 

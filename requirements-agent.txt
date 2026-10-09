@@ -1,0 +1,29 @@
+# Agent worker runtime dependencies.
+# It intentionally excludes sentence-transformers / transformers / torch.
+# RAG retrieval is delegated to the internal rag-api service.
+
+pydantic>=2.9,<3
+pydantic-settings>=2.5,<3
+
+sqlalchemy[asyncio]>=2.0,<3
+asyncpg>=0.29,<1
+psycopg[binary,pool]>=3.2,<4
+
+redis>=5,<7
+openai>=1.50,<3
+httpx>=0.27,<1
+
+langgraph>=0.2,<2
+langchain-core>=0.3,<2
+langgraph-checkpoint-postgres>=2,<4
+
+mcp>=1,<3
+
+pwdlib[argon2]>=0.2,<1
+pyjwt>=2.9,<3
+
+structlog>=24,<27
+opentelemetry-api>=1.27,<2
+opentelemetry-sdk>=1.27,<2
+opentelemetry-instrumentation-fastapi>=0.48b0
+opentelemetry-exporter-otlp>=1.27,<2

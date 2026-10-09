@@ -27,6 +27,8 @@ from app.dependencies import (
     require_permission,
 )
 
+from app.audit import write_audit_log
+
 from app.rbac import Permission
 
 from infrastructure.database import (
@@ -102,6 +104,24 @@ async def delete_document(
         job.status = "cancelled"
         job.lease_owner = None
         job.lease_until = None
+
+    await write_audit_log(
+        db,
+        current_user=current_user,
+        action="document.delete",
+        resource_type="knowledge_document",
+        resource_id=str(document.id),
+        summary=f"删除文档：{document.filename}",
+        metadata={
+            "knowledge_base_id": str(
+                document.knowledge_base_id
+            ),
+            "filename": document.filename,
+            "current_version": (
+                document.current_version
+            ),
+        },
+    )
 
     await db.commit()
 

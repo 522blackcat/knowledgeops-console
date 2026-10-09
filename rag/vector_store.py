@@ -27,11 +27,6 @@ from infrastructure.config import (
     get_settings,
 )
 
-from rag.embedding import (
-    embedding_dimension,
-)
-
-
 @lru_cache(maxsize=1)
 def get_qdrant_client() -> AsyncQdrantClient:
     """创建可复用的异步 Qdrant 客户端。"""
@@ -44,7 +39,7 @@ def get_qdrant_client() -> AsyncQdrantClient:
             settings.qdrant_api_key
             or None
         ),
-        timeout=60,
+        timeout=settings.qdrant_timeout_seconds,
     )
 
 
@@ -56,10 +51,47 @@ async def close_qdrant() -> None:
     get_qdrant_client.cache_clear()
 
 
+async def ensure_payload_indexes(
+    collection_name: str,
+) -> None:
+    """
+    确保过滤所需的 payload 索引存在。
+
+    对已存在的 Collection 也会执行，
+    这样新增索引不需要额外的迁移脚本。
+    重复创建由 409 吞掉。
+    """
+
+    client = get_qdrant_client()
+
+    for field_name in (
+        "tenant_id",
+        "document_id",
+        "document_version",
+    ):
+        try:
+            await client.create_payload_index(
+                collection_name=collection_name,
+                field_name=field_name,
+                field_schema=(
+                    models.PayloadSchemaType.KEYWORD
+                    if field_name != "document_version"
+                    else models.PayloadSchemaType.INTEGER
+                ),
+            )
+        except UnexpectedResponse as exc:
+            if exc.status_code != 409:
+                raise
+
+
 async def ensure_collection(
     collection_name: str,
 ) -> None:
     """不存在时创建知识库 Collection。"""
+
+    from rag.embedding import (
+        embedding_dimension,
+    )
 
     client = get_qdrant_client()
 
@@ -67,44 +99,22 @@ async def ensure_collection(
         collection_name
     )
 
-    if exists:
-        return
+    if not exists:
+        try:
+            await client.create_collection(
+                collection_name=collection_name,
+                vectors_config=models.VectorParams(
+                    size=embedding_dimension(),
+                    distance=models.Distance.COSINE,
+                ),
+            )
+        except UnexpectedResponse as exc:
+            if exc.status_code != 409:
+                raise
 
-    try:
-        await client.create_collection(
-            collection_name=collection_name,
-            vectors_config=models.VectorParams(
-                size=embedding_dimension(),
-                distance=models.Distance.COSINE,
-            ),
-        )
-    except UnexpectedResponse as exc:
-        if exc.status_code != 409:
-            raise
-
-    try:
-        await client.create_payload_index(
-            collection_name=collection_name,
-            field_name="tenant_id",
-            field_schema=(
-                models.PayloadSchemaType.KEYWORD
-            ),
-        )
-    except UnexpectedResponse as exc:
-        if exc.status_code != 409:
-            raise
-
-    try:
-        await client.create_payload_index(
-            collection_name=collection_name,
-            field_name="document_id",
-            field_schema=(
-                models.PayloadSchemaType.KEYWORD
-            ),
-        )
-    except UnexpectedResponse as exc:
-        if exc.status_code != 409:
-            raise
+    await ensure_payload_indexes(
+        collection_name
+    )
 
 
 async def upsert_vectors(
@@ -197,3 +207,70 @@ async def delete_document_vectors(
         ),
         wait=True,
     )
+
+
+async def delete_document_stale_vectors(
+    *,
+    collection_name: str,
+    tenant_id: uuid.UUID,
+    document_id: uuid.UUID,
+    before_version: int,
+) -> int:
+    """
+    删除一个文档在 before_version 之前的向量。
+
+    新版本发布后调用，用于回收旧版本 point，
+    否则过期向量会持续占用向量检索的候选位。
+
+    删除条件包含 document_id，
+    不会跨文档、也不会跨租户误删。
+    操作可重复执行。
+
+    返回被回收的 point 数量。
+    Qdrant 的删除响应不带受影响行数，
+    所以数量在删除前按同一过滤条件统计。
+    """
+
+    if before_version <= 1:
+        return 0
+
+    stale_filter = models.Filter(
+        must=[
+            models.FieldCondition(
+                key="tenant_id",
+                match=models.MatchValue(
+                    value=str(tenant_id)
+                ),
+            ),
+            models.FieldCondition(
+                key="document_id",
+                match=models.MatchValue(
+                    value=str(document_id)
+                ),
+            ),
+            models.FieldCondition(
+                key="document_version",
+                range=models.Range(
+                    lt=before_version
+                ),
+            ),
+        ]
+    )
+
+    client = get_qdrant_client()
+
+    count_result = await client.count(
+        collection_name=collection_name,
+        count_filter=stale_filter,
+        exact=True,
+    )
+
+    await client.delete(
+        collection_name=collection_name,
+        points_selector=(
+            models.FilterSelector(filter=stale_filter)
+        ),
+        wait=True,
+    )
+
+    return int(count_result.count)

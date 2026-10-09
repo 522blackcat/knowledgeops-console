@@ -18,6 +18,10 @@ from app.admin_api import (
     router as admin_router,
 )
 
+from app.audit_api import (
+    router as audit_router,
+)
+
 from app.approval_api import (
     router as approval_router,
 )
@@ -112,6 +116,10 @@ app.include_router(
 
 app.include_router(
     admin_router
+)
+
+app.include_router(
+    audit_router
 )
 
 app.include_router(

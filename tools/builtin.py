@@ -10,7 +10,13 @@ tenant_id 由服务端运行上下文注入。
 
 import uuid
 
+import httpx
+
 from sqlalchemy import select
+
+from infrastructure.config import (
+    get_settings,
+)
 
 from infrastructure.database import (
     session_scope,
@@ -18,10 +24,6 @@ from infrastructure.database import (
 
 from infrastructure.models import (
     KnowledgeBase,
-)
-
-from rag.retrieval import (
-    hybrid_retrieve,
 )
 
 from tools.registry import (
@@ -40,6 +42,8 @@ def register_builtin_tools(
     ],
 ) -> None:
     """注册当前 Agent 可用的内置工具。"""
+
+    settings = get_settings()
 
     async def search_knowledge(
         arguments: dict,
@@ -90,37 +94,117 @@ def register_builtin_tools(
                     "知识库不存在"
                 )
 
-            hits = await hybrid_retrieve(
-                db,
-                tenant_id=tenant_id,
-                knowledge_base_id=(
-                    knowledge_base_id
-                ),
-                query=query,
-            )
+        if settings.rag_retrieval_url:
+            try:
+                async with httpx.AsyncClient(
+                    timeout=settings.qdrant_timeout_seconds
+                ) as client:
+                    response = await client.post(
+                        (
+                            settings.rag_retrieval_url.rstrip("/")
+                            + "/internal/rag/retrieve"
+                        ),
+                        json={
+                            "tenant_id": str(tenant_id),
+                            "knowledge_base_ids": [
+                                str(knowledge_base_id)
+                            ],
+                            "query": query,
+                            "use_reranker": True,
+                        },
+                    )
+                    response.raise_for_status()
+                    payload = response.json()
+
+            except (
+                httpx.HTTPError,
+                ValueError,
+            ) as exc:
+                return {
+                    "query": query,
+                    "results": [],
+                    "error": {
+                        "type": (
+                            exc.__class__.__name__
+                        ),
+                        "message": (
+                            "知识库检索服务暂时不可用，"
+                            "请稍后重试或检查 rag-api。"
+                        ),
+                    },
+                }
+
+            results = []
+            for hit in payload.get("citations") or []:
+                metadata = {
+                    "knowledge_base_id": hit.get(
+                        "knowledge_base_id"
+                    ),
+                    "knowledge_base_name": hit.get(
+                        "knowledge_base_name"
+                    ),
+                    "knowledge_base_scope": hit.get(
+                        "knowledge_base_scope"
+                    ),
+                    "filename": hit.get("filename"),
+                    "document_version": hit.get(
+                        "document_version"
+                    ),
+                    "current_version": hit.get(
+                        "current_version"
+                    ),
+                    "heading": hit.get("heading"),
+                    "sheet": hit.get("sheet"),
+                    "section_label": hit.get(
+                        "section_label"
+                    ),
+                }
+                results.append({
+                    "chunk_id": hit.get("chunk_id"),
+                    "document_id": hit.get(
+                        "document_id"
+                    ),
+                    "text": hit.get("preview", ""),
+                    "source_page": hit.get(
+                        "source_page"
+                    ),
+                    "score": hit.get("score"),
+                    "metadata": metadata,
+                })
 
             return {
                 "query": query,
-                "results": [
-                    {
-                        "chunk_id": str(
-                            hit.chunk_id
-                        ),
-                        "document_id": str(
-                            hit.document_id
-                        ),
-                        "text": hit.text,
-                        "source_page": (
-                            hit.source_page
-                        ),
-                        "score": hit.score,
-                        "metadata": (
-                            hit.metadata
-                        ),
-                    }
-                    for hit in hits
-                ],
+                "results": results,
             }
+
+        from rag.retrieval import (
+            hybrid_retrieve,
+        )
+
+        async with session_scope() as db:
+            hits = await hybrid_retrieve(
+                db,
+                tenant_id=tenant_id,
+                knowledge_base_id=knowledge_base_id,
+                query=query,
+            )
+
+        return {
+            "query": query,
+            "results": [
+                {
+                    "chunk_id": str(hit.chunk_id),
+                    "document_id": str(
+                        hit.document_id
+                    ),
+                    "text": hit.text,
+                    "source_page": hit.source_page,
+                    "score": hit.score,
+                    "metadata": hit.metadata,
+                }
+                for hit in hits
+            ],
+        }
 
     registry.register(
         ToolDefinition(

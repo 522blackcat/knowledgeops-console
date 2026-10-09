@@ -162,6 +162,85 @@ class User(Base):
     )
 
 
+class AuditLog(Base):
+    """租户内关键操作审计日志。"""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=new_uuid,
+    )
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+    )
+
+    actor_user_id: Mapped[uuid.UUID | None] = (
+        mapped_column(
+            UUID(as_uuid=True),
+            ForeignKey("users.id"),
+            nullable=True,
+            index=True,
+        )
+    )
+
+    actor_username: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+
+    action: Mapped[str] = mapped_column(
+        String(80),
+        nullable=False,
+    )
+
+    resource_type: Mapped[str] = mapped_column(
+        String(80),
+        nullable=False,
+    )
+
+    resource_id: Mapped[str] = mapped_column(
+        String(120),
+        nullable=False,
+    )
+
+    summary: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False,
+    )
+
+    metadata_json: Mapped[dict] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_audit_tenant_created",
+            "tenant_id",
+            "created_at",
+        ),
+        Index(
+            "ix_audit_tenant_resource",
+            "tenant_id",
+            "resource_type",
+            "resource_id",
+        ),
+    )
+
+
 # ========================================================
 # 03. Agent 定义与会话
 # ========================================================
@@ -923,6 +1002,21 @@ class ApprovalRequest(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+
+    @property
+    def approval_wait_ms(self) -> int | None:
+        """Milliseconds from request creation to review completion."""
+
+        if self.reviewed_at is None:
+            return None
+
+        return int(
+            (
+                self.reviewed_at
+                - self.created_at
+            ).total_seconds()
+            * 1000
+        )
 
     __table_args__ = (
         UniqueConstraint(

@@ -129,6 +129,7 @@ class ApprovalResponse(APIModel):
     review_reason: str | None
     created_at: datetime
     reviewed_at: datetime | None
+    approval_wait_ms: int | None = None
 
 
 class ApprovalDecisionRequest(BaseModel):

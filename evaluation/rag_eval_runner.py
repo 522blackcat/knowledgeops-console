@@ -19,7 +19,7 @@ from typing import Any
 import httpx
 
 
-DEFAULT_CASE_FILE = Path(__file__).with_name("rag_eval_cases.json")
+DEFAULT_CASE_FILE = Path(__file__).with_name("rag_eval_cases_v3.json")
 DEFAULT_OUTPUT_DIR = Path(__file__).with_name("results")
 
 
@@ -181,6 +181,40 @@ def call_rag_eval(
     return response.json()
 
 
+def required_terms(case: dict[str, Any]) -> list[str]:
+    """判案必须命中的词：v2 的 expected_terms 加 v3 的 anchor_text。
+
+    v3 用例不再手写期望词，改用 anchor_text 记录原文里的答案行。
+    锚点同样必须被召回，否则判案会退化成"只要有结果就算过"。
+    """
+
+    terms = [
+        str(item).strip()
+        for item in case.get("expected_terms", [])
+        if str(item).strip()
+    ]
+    anchor = str(case.get("anchor_text") or "").strip()
+    if anchor and anchor not in terms:
+        terms.append(anchor)
+    return terms
+
+
+def anchor_rank(
+    results: list[dict[str, Any]],
+    terms: list[str],
+) -> int | None:
+    """第一条含任一判案词的命中排在第几；没进返回列表就是 None。
+
+    v3 用例的判案词就是锚点本身，所以这个名次即"答案行被排到第几"。
+    """
+
+    for index, item in enumerate(results, start=1):
+        text = str(item.get("text") or item.get("preview") or "")
+        if any(term in text for term in terms):
+            return index
+    return None
+
+
 def judge_case(
     case: dict[str, Any],
     response: dict[str, Any],
@@ -206,11 +240,7 @@ def judge_case(
         ])
 
     min_hits = int(case.get("min_hits", 1))
-    expected_terms = [
-        str(item).strip()
-        for item in case.get("expected_terms", [])
-        if str(item).strip()
-    ]
+    expected_terms = required_terms(case)
     expected_any_terms = [
         str(item).strip()
         for item in case.get("expected_any_terms", [])
@@ -292,6 +322,7 @@ def judge_case(
         "failures": failures,
         "elapsed_ms": elapsed_ms,
         "hit_count": hit_count,
+        "anchor_rank": anchor_rank(results, expected_terms),
         "top_results": results[:5],
     }
 
@@ -325,6 +356,47 @@ def run_case(
             "hit_count": 0,
             "top_results": [],
         }
+
+
+def rank_metrics(
+    results: list[dict[str, Any]],
+    ks: tuple[int, ...] = (1, 3, 5),
+) -> dict[str, Any]:
+    """把 pass_rate 拆回 hit@k / MRR。
+
+    pass_rate 判的是"锚点在返回的整页结果里"，等价 hit@返回条数，
+    只看它会把首条精度完全藏住——而首条精度才是分块和融合调参的目标。
+    """
+
+    scored = len(results)
+    if scored == 0:
+        return {"scored_cases": 0}
+
+    hits = {f"hit@{k}": 0 for k in ks}
+    reciprocal_rank = 0.0
+    rank_histogram: dict[str, int] = {}
+    miss_ids: list[str] = []
+    for result in results:
+        rank = result.get("anchor_rank")
+        if rank is None:
+            miss_ids.append(str(result["id"]))
+            continue
+        rank_histogram[str(rank)] = rank_histogram.get(str(rank), 0) + 1
+        reciprocal_rank += 1.0 / rank
+        for k in ks:
+            if rank <= k:
+                hits[f"hit@{k}"] += 1
+
+    return {
+        "scored_cases": scored,
+        **{
+            name: round(value / scored, 4)
+            for name, value in hits.items()
+        },
+        "mrr": round(reciprocal_rank / scored, 4),
+        "rank_histogram": dict(sorted(rank_histogram.items())),
+        "miss_ids": miss_ids,
+    }
 
 
 def write_report(
@@ -363,10 +435,13 @@ def write_summary_tables(
     columns = [
         "id",
         "passed",
+        "anchor_rank",
         "hit_count",
         "elapsed_ms",
         "query",
         "top_filename",
+        "top_section",
+        "top_page",
         "top_score",
         "failures",
     ]
@@ -378,16 +453,20 @@ def write_summary_tables(
                 {
                     "id": result["id"],
                     "passed": "PASS" if result["passed"] else "FAIL",
+                    "anchor_rank": result.get("anchor_rank") or "",
                     "hit_count": result["hit_count"],
                     "elapsed_ms": result["elapsed_ms"],
                     "query": result.get("query") or "",
                     "top_filename": first_result_value(result, "filename"),
+                    "top_section": first_result_value(result, "section_label"),
+                    "top_page": first_result_value(result, "source_page"),
                     "top_score": first_result_value(result, "score"),
                     "failures": "; ".join(result.get("failures") or []),
                 }
             )
 
     summary = report["summary"]
+    metrics = summary.get("rank_metrics") or {}
     lines = [
         "# RAG Eval Summary",
         "",
@@ -397,14 +476,32 @@ def write_summary_tables(
         f"- Pass rate: {summary['pass_rate']:.1%}",
         f"- Retrieval mode: {summary['retrieval_mode']}",
         f"- Use reranker: {summary['use_reranker']}",
+    ]
+    if metrics.get("scored_cases"):
+        lines += [
+            f"- Scored cases: {metrics['scored_cases']}",
+            f"- hit@1: {metrics.get('hit@1', 0):.4f}",
+            f"- hit@3: {metrics.get('hit@3', 0):.4f}",
+            f"- hit@5: {metrics.get('hit@5', 0):.4f}",
+            f"- MRR: {metrics['mrr']:.4f}",
+            f"- Rank histogram: {metrics.get('rank_histogram') or {}}",
+            f"- Miss ids: {', '.join(metrics.get('miss_ids') or []) or '(none)'}",
+        ]
+    lines += [
         "",
-        "| ID | Result | Hits | Time | Query | Top file | Failures |",
-        "| --- | --- | ---: | ---: | --- | --- | --- |",
+        "| ID | Result | Rank | Hits | Time | Query | Top file | Failures |",
+        "| --- | --- | ---: | ---: | ---: | --- | --- | --- |",
     ]
     for result in rows:
         status = "PASS" if result["passed"] else "FAIL"
         query = str(result.get("query") or "").replace("|", "\\|")
         top_filename = first_result_value(result, "filename").replace("|", "\\|")
+        top_section = first_result_value(result, "section_label").replace("|", "\\|")
+        top_page = first_result_value(result, "source_page")
+        if top_section:
+            top_filename = f"{top_filename} / {top_section}"
+        if top_page:
+            top_filename = f"{top_filename} 第{top_page}页"
         failures = "; ".join(result.get("failures") or []).replace("|", "\\|")
         lines.append(
             "| "
@@ -412,6 +509,7 @@ def write_summary_tables(
                 [
                     str(result["id"]),
                     status,
+                    str(result.get("anchor_rank") or "-"),
                     str(result["hit_count"]),
                     str(result["elapsed_ms"]),
                     query,
@@ -464,6 +562,7 @@ def main() -> int:
             "fail_under": args.fail_under,
             "retrieval_mode": args.retrieval_mode,
             "use_reranker": args.use_reranker,
+            "rank_metrics": rank_metrics(results),
         },
         "results": results,
     }
@@ -478,6 +577,16 @@ def main() -> int:
         f"RAG eval: {passed}/{total} passed "
         f"({pass_rate:.1%}); report={output_path}"
     )
+    metrics = report["summary"]["rank_metrics"]
+    if metrics.get("scored_cases"):
+        print(
+            "rank metrics: "
+            + " ".join(
+                f"{name}={metrics[name]}"
+                for name in ("hit@1", "hit@3", "hit@5", "mrr")
+            )
+            + f" miss={len(metrics.get('miss_ids') or [])}"
+        )
     print(f"CSV summary: {csv_path}")
     print(f"Markdown summary: {md_path}")
     for result in results:

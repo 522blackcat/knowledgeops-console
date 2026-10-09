@@ -20,6 +20,8 @@ frontend/.vite/
 data/
 uploads/
 logs/
+evaluation/results/
+labels_audit.json
 
 node_modules/
 dist/
@@ -28,3 +30,7 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# 本地评测虚拟环境，绝不能进构建上下文（1.3G，且镜像里已有依赖）
+.venv*/
+models/

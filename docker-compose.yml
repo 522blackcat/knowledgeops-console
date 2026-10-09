@@ -28,39 +28,84 @@ services:
       timeout: 5s
       retries: 20
   api:
-    build: .
+    build:
+      context: .
+      target: api
     restart: unless-stopped
     env_file: [.env]
     environment:
       HF_HOME: /models/huggingface
       SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+      # AutoTokenizer 只认 HF 的缓存变量，权重实际在 sentence-transformers 目录下
+      HF_HUB_CACHE: /models/sentence-transformers
+      # 现有 qdrant 只把端口发布到宿主 127.0.0.1，容器走
+      # host.docker.internal 是到不了宿主回环的，
+      # 所以把它挂进本 compose 网络后用容器名访问。
+      QDRANT_URL: http://qdrant:6333
+      RAG_RETRIEVAL_URL: http://rag-api:8010
     extra_hosts: ['host.docker.internal:host-gateway']
     ports: ['${API_PORT:-8000}:8000']
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
-    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
+      rag-api: {condition: service_started}
+    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', './evaluation/results:/app/evaluation/results', 'hf_models:/models']
     command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000']
   agent-worker:
-    build: .
+    build:
+      context: .
+      target: agent
     restart: unless-stopped
     env_file: [.env]
     environment:
       HF_HOME: /models/huggingface
       SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+      # AutoTokenizer 只认 HF 的缓存变量，权重实际在 sentence-transformers 目录下
+      HF_HUB_CACHE: /models/sentence-transformers
+      # 现有 qdrant 只把端口发布到宿主 127.0.0.1，容器走
+      # host.docker.internal 是到不了宿主回环的，
+      # 所以把它挂进本 compose 网络后用容器名访问。
+      QDRANT_URL: http://qdrant:6333
+      RAG_RETRIEVAL_URL: http://rag-api:8010
+    extra_hosts: ['host.docker.internal:host-gateway']
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      rag-api: {condition: service_started}
+    volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
+    command: [python, -m, agent.worker]
+  rag-api:
+    build:
+      context: .
+      target: full
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      HF_HOME: /models/huggingface
+      SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+      HF_HUB_CACHE: /models/sentence-transformers
+      QDRANT_URL: http://qdrant:6333
     extra_hosts: ['host.docker.internal:host-gateway']
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
     volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
-    command: [python, -m, agent.worker]
+    command: [uvicorn, rag.service:app, --host, 0.0.0.0, --port, '8010']
   rag-worker:
-    build: .
+    build:
+      context: .
+      target: full
     restart: unless-stopped
     env_file: [.env]
     environment:
       HF_HOME: /models/huggingface
       SENTENCE_TRANSFORMERS_HOME: /models/sentence-transformers
+      # AutoTokenizer 只认 HF 的缓存变量，权重实际在 sentence-transformers 目录下
+      HF_HUB_CACHE: /models/sentence-transformers
+      # 现有 qdrant 只把端口发布到宿主 127.0.0.1，容器走
+      # host.docker.internal 是到不了宿主回环的，
+      # 所以把它挂进本 compose 网络后用容器名访问。
+      QDRANT_URL: http://qdrant:6333
     extra_hosts: ['host.docker.internal:host-gateway']
     depends_on:
       postgres: {condition: service_healthy}
@@ -68,7 +113,9 @@ services:
     volumes: ['./uploads:/app/uploads', './data:/app/data', './logs:/app/logs', 'hf_models:/models']
     command: [python, -m, rag.worker]
   cleanup-worker:
-    build: .
+    build:
+      context: .
+      target: lite
     restart: unless-stopped
     env_file: [.env]
     extra_hosts: ['host.docker.internal:host-gateway']
@@ -82,6 +129,31 @@ services:
     restart: unless-stopped
     depends_on: [api]
     ports: ['${FRONTEND_PORT:-8080}:80']
+  # 评测跑在容器网络里，指向 api 服务名而不是 localhost。
+  # 用法：docker compose --profile eval run --rm rag-eval
+  rag-eval:
+    build:
+      context: .
+      target: lite
+    profiles: [eval]
+    env_file: [.env]
+    # 报告落宿主 evaluation/results/，与 README 的输出目录一致。
+    volumes: ['./evaluation/results:/app/evaluation/results']
+    depends_on:
+      api: {condition: service_started}
+    command:
+      - python
+      - evaluation/rag_eval_runner.py
+      - --base-url
+      - http://api:8000
+      - --cases
+      - evaluation/rag_eval_cases_v3.json
+      - --retrieval-mode
+      - hybrid
+      - --timeout
+      - "180"
+      - --fail-under
+      - "0.8"
 volumes:
   postgres_data:
     name: project_postgres_data

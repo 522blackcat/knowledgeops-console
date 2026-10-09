@@ -133,7 +133,7 @@ def parse_markdown_file(
 def parse_html_file(
     path: Path,
 ) -> list[ParsedSection]:
-    """移除脚本和样式后提取 HTML 文本。"""
+    """移除脚本和样式后按标题提取 HTML 文本。"""
 
     html = path.read_text(
         encoding="utf-8-sig"
@@ -151,14 +151,74 @@ def parse_html_file(
     ]):
         element.decompose()
 
+    sections = []
+    current_heading = None
+    current_level = None
+    current_lines = []
+
+    def flush_current():
+        nonlocal current_lines
+        text = "\n".join(current_lines).strip()
+        if text:
+            sections.append(
+                ParsedSection(
+                    text=text,
+                    metadata={
+                        "heading": current_heading,
+                        "heading_level": current_level,
+                    }
+                    if current_heading
+                    else None,
+                )
+            )
+        current_lines = []
+
+    for element in soup.find_all([
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "li",
+        "td",
+        "th",
+    ]):
+        text = element.get_text(
+            separator=" ",
+            strip=True,
+        )
+        if not text:
+            continue
+
+        if element.name in {
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+        }:
+            flush_current()
+            current_heading = text
+            current_level = int(element.name[1])
+            current_lines.append(text)
+            continue
+
+        current_lines.append(text)
+
+    flush_current()
+
+    if sections:
+        return sections
+
     text = soup.get_text(
         separator="\n",
         strip=True,
     )
 
-    return [
-        ParsedSection(text=text)
-    ]
+    return [ParsedSection(text=text)]
 
 
 def parse_pdf_file(
@@ -197,19 +257,66 @@ def parse_pdf_file(
 def parse_docx_file(
     path: Path,
 ) -> list[ParsedSection]:
-    """提取 Word 正文与表格文本。"""
+    """按 Word 标题样式提取正文与表格文本。"""
 
     document = Document(
         str(path)
     )
 
-    parts = []
+    sections = []
+    current_heading = None
+    current_level = None
+    current_lines = []
+
+    def flush_current():
+        nonlocal current_lines
+        text = "\n".join(current_lines).strip()
+        if text:
+            sections.append(
+                ParsedSection(
+                    text=text,
+                    metadata={
+                        "heading": current_heading,
+                        "heading_level": current_level,
+                    }
+                    if current_heading
+                    else None,
+                )
+            )
+        current_lines = []
 
     for paragraph in document.paragraphs:
         text = paragraph.text.strip()
 
-        if text:
-            parts.append(text)
+        if not text:
+            continue
+
+        style_name = (
+            paragraph.style.name
+            if paragraph.style is not None
+            else ""
+        )
+        is_heading = style_name.lower().startswith(
+            "heading"
+        ) or style_name.startswith("标题")
+
+        if is_heading:
+            flush_current()
+            current_heading = text
+            digits = "".join(
+                char
+                for char in style_name
+                if char.isdigit()
+            )
+            current_level = (
+                int(digits)
+                if digits
+                else None
+            )
+            current_lines.append(text)
+            continue
+
+        current_lines.append(text)
 
     for table in document.tables:
         for row in table.rows:
@@ -219,15 +326,13 @@ def parse_docx_file(
             ]
 
             if any(cells):
-                parts.append(
+                current_lines.append(
                     " | ".join(cells)
                 )
 
-    return [
-        ParsedSection(
-            text="\n".join(parts)
-        )
-    ]
+    flush_current()
+
+    return sections
 
 
 def parse_xlsx_file(
